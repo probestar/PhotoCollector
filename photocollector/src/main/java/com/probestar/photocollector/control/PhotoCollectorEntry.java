@@ -11,7 +11,6 @@ public class PhotoCollectorEntry {
 			PhotoCollectorConfig.getInstance();
 			PhotoCollectorDirector director = new PhotoCollectorDirector();
 			director.start();
-			System.in.read();
 		} catch (Throwable t) {
 			_tracer.error("PhotoCollectorEntry.main error.", t);
 		}

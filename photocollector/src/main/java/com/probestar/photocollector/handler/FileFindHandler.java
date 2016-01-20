@@ -1,8 +1,10 @@
 package com.probestar.photocollector.handler;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.Collections;
 
+import com.google.common.io.Files;
 import com.probestar.photocollector.common.PhotoCollectorConfig;
 import com.probestar.psutils.PSFile;
 import com.probestar.psutils.PSTracer;
@@ -10,14 +12,16 @@ import com.probestar.psutils.PSTracer;
 public class FileFindHandler {
 	private static PSTracer _tracer = PSTracer.getInstance(FileFindHandler.class);
 
-	private ConcurrentLinkedQueue<String> _files;
+	private ArrayList<String> _files;
 
 	public FileFindHandler() {
-		_files = new ConcurrentLinkedQueue<String>();
+		_files = new ArrayList<String>();
 	}
 
-	public ConcurrentLinkedQueue<String> load() {
-		handle(PhotoCollectorConfig.getInstance().getSearchPath());
+	public ArrayList<String> load() {
+		for (String path : PhotoCollectorConfig.getInstance().getSearchPath())
+			handle(path);
+		Collections.sort(_files);
 		return _files;
 	}
 
@@ -29,8 +33,10 @@ public class FileFindHandler {
 			if (f.isDirectory()) {
 				handle(fullPath);
 			} else {
-				if (PSFile.isPicture(f) || PSFile.isMovie(f))
-					_files.offer(fullPath);
+				if (PSFile.isPicture(f) || PSFile.isMovie(f)
+						|| Files.getFileExtension(f.getName()).equalsIgnoreCase("AAE")
+						|| Files.getFileExtension(f.getName()).equalsIgnoreCase("PDF"))
+					_files.add(fullPath);
 				else {
 					if (!f.getName().startsWith("."))
 						_tracer.warn("Got non-pic files. " + f.getAbsolutePath());

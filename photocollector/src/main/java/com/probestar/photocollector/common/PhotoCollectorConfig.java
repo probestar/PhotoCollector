@@ -3,6 +3,7 @@ package com.probestar.photocollector.common;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import com.probestar.psutils.PSTracer;
@@ -12,7 +13,7 @@ public class PhotoCollectorConfig {
 	private static PhotoCollectorConfig _instance;
 
 	private String _dbPath;
-	private String _searchPath;
+	private ArrayList<String> _searchPath;
 
 	static {
 		try {
@@ -31,14 +32,16 @@ public class PhotoCollectorConfig {
 		Properties p = new Properties();
 		p.load(new FileInputStream("PhotoCollector.properties"));
 		_dbPath = p.getProperty("DbPath").endsWith("/") ? p.getProperty("DbPath") : p.getProperty("DbPath") + "/";
-		_searchPath = p.getProperty("SearchPath");
+		_searchPath = new ArrayList<String>();
+		for (String s : p.getProperty("SearchPath").split(","))
+			_searchPath.add(s);
 	}
 
 	public String getDbPath() {
 		return _dbPath;
 	}
 
-	public String getSearchPath() {
+	public ArrayList<String> getSearchPath() {
 		return _searchPath;
 	}
 

@@ -2,8 +2,9 @@ package com.probestar.photocollector.control;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.io.Files;
 import com.probestar.photocollector.common.PhotoCollectorConfig;
@@ -18,7 +19,8 @@ public class PhotoCollectorDirector {
 	private static PSTracer _tracer = PSTracer.getInstance(PhotoCollectorDirector.class);
 
 	private ConcurrentHashMap<Integer, PhotoDescription> _db;
-	private ConcurrentLinkedQueue<String> _files;
+	private ArrayList<String> _files;
+	private AtomicInteger _currentSize;;
 
 	public PhotoCollectorDirector() {
 	}
@@ -34,16 +36,17 @@ public class PhotoCollectorDirector {
 		_db = (new DbLoadHandler()).load();
 		_tracer.info("Start to load search path");
 		_files = (new FileFindHandler()).load();
-		_tracer.info("Load finished. Db: " + _db.size() + "; SearchPath: " + _files.size());
+		_currentSize = new AtomicInteger(_files.size());
+		_tracer.info("Load finished. Db: " + _db.size() + "; SearchPath: " + _currentSize);
 	}
 
 	private void startWatcher() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
-				while (!_files.isEmpty()) {
-					_tracer.info(_files.size() + " items left.");
+				while (_currentSize.intValue() > 0) {
+					_tracer.info(_currentSize + " items left.");
 					try {
-						Thread.sleep(10 * 1000);
+						Thread.sleep(3 * 1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -55,10 +58,11 @@ public class PhotoCollectorDirector {
 	}
 
 	private void process() {
-		while (!_files.isEmpty()) {
-			PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.poll());
-			_tracer.info("Get PhotoDescription.\r\n" + desc.toString());
+		for (int i = _files.size() - 1; i >= 0; i--) {
+			PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.get(i));
+			_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
 			import2Db(desc);
+			_currentSize.decrementAndGet();
 		}
 	}
 
