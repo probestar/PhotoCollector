@@ -43,10 +43,14 @@ public class PhotoCollectorUtils {
 				String pictrueTime = map.get("Date/Time Original");
 				if (pictrueTime == null)
 					pictrueTime = map.get("Date/Time");
-				if (pictrueTime == null)
+				if (pictrueTime == null) {
 					desc.setPictureTime(f.lastModified());
-				else
+				} else
 					desc.setPictureTime(PSDate.string2Date(pictrueTime, _formatters).getTime());
+				String make = map.get("Make");
+				if (make == null)
+					make = "";
+				desc.setMake(make);
 			} catch (ParseException e) {
 				_tracer.error("PhotoCollectorUtils.getPhotoDescription parse time error. ", e);
 				System.exit(0);
@@ -60,7 +64,7 @@ public class PhotoCollectorUtils {
 		return desc;
 	}
 
-	public static HashMap<String, String> readExif(File file) throws ImageProcessingException, IOException {
+	private static HashMap<String, String> readExif(File file) throws ImageProcessingException, IOException {
 		HashMap<String, String> map = new HashMap<String, String>();
 		InputStream is = null;
 		is = new FileInputStream(file);

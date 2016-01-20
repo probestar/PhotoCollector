@@ -11,6 +11,7 @@ public class PhotoDescription {
 	private long _modifiTime;
 
 	private long _pictureTime;
+	private String _make;
 
 	public void setFileName(String name) {
 		_name = name;
@@ -59,6 +60,14 @@ public class PhotoDescription {
 		return _path + _name;
 	}
 
+	public void setMake(String make) {
+		_make = make;
+	}
+
+	public String getMake() {
+		return _make;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
@@ -79,6 +88,9 @@ public class PhotoDescription {
 		s.append("\r\n");
 		s.append("PictureTime: ");
 		s.append(PSDate.date2String(getPictureTime(), _dateFormat));
+		s.append("\r\n");
+		s.append("Make: ");
+		s.append(getMake());
 		s.append("\r\n");
 		return s.toString();
 	}

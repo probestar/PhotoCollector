@@ -57,7 +57,7 @@ public class PhotoCollectorDirector {
 	private void process() {
 		while (!_files.isEmpty()) {
 			PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.poll());
-			_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
+			_tracer.info("Get PhotoDescription.\r\n" + desc.toString());
 			import2Db(desc);
 		}
 	}
@@ -69,11 +69,12 @@ public class PhotoCollectorDirector {
 					+ desc.getFileFullName());
 			return;
 		}
+		// String toPath = PhotoCollectorConfig.getInstance().getDbPath()
+		// + PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/"
+		// + PSDate.date2String(desc.getPictureTime(), "yyyyMMdd_HHmmss") + "."
+		// + Files.getFileExtension(desc.getFileName());
 		String toPath = PhotoCollectorConfig.getInstance().getDbPath()
-				+ PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/"
-				+ PSDate.date2String(desc.getPictureTime(), "yyyyMMdd_HHmmss") + "."
-				+ Files.getFileExtension(desc.getFileName());
-		;
+				+ PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/" + desc.getFileName();
 		_tracer.debug("Got to " + toPath);
 		File from = new File(desc.getFileFullName());
 		File to = new File(toPath);
