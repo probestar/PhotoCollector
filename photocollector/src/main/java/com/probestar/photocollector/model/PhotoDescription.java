@@ -49,7 +49,10 @@ public class PhotoDescription {
 	}
 
 	public void setPictureTime(long time) {
-		_pictureTime = time;
+		if (time < 0)
+			_pictureTime = 0;
+		else
+			_pictureTime = time;
 	}
 
 	public long getPictureTime() {

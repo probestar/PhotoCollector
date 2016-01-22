@@ -14,6 +14,8 @@ public class PhotoCollectorConfig {
 
 	private String _dbPath;
 	private ArrayList<String> _searchPath;
+	private boolean _delDupFilesInDb;
+	private boolean _delAfterImport;
 
 	static {
 		try {
@@ -29,12 +31,18 @@ public class PhotoCollectorConfig {
 	}
 
 	private PhotoCollectorConfig() throws FileNotFoundException, IOException {
+		load();
+	}
+
+	private void load() throws FileNotFoundException, IOException {
 		Properties p = new Properties();
 		p.load(new FileInputStream("PhotoCollector.properties"));
 		_dbPath = p.getProperty("DbPath").endsWith("/") ? p.getProperty("DbPath") : p.getProperty("DbPath") + "/";
 		_searchPath = new ArrayList<String>();
 		for (String s : p.getProperty("SearchPath").split(","))
 			_searchPath.add(s);
+		_delDupFilesInDb = Boolean.parseBoolean(p.getProperty("DelDupFilesInDb", "false"));
+		_delAfterImport = Boolean.parseBoolean(p.getProperty("DelAfterImport", "false"));
 	}
 
 	public String getDbPath() {
@@ -43,6 +51,14 @@ public class PhotoCollectorConfig {
 
 	public ArrayList<String> getSearchPath() {
 		return _searchPath;
+	}
+
+	public boolean isDelDupFilesInDb() {
+		return _delDupFilesInDb;
+	}
+
+	public boolean isDelAfterImport() {
+		return _delAfterImport;
 	}
 
 	@Override

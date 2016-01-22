@@ -1,6 +1,9 @@
 package com.probestar.photocollector.handler;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.probestar.photocollector.common.PhotoCollectorConfig;
@@ -37,6 +40,14 @@ public class DbLoadHandler {
 				if (_db.containsKey(desc.hashCode())) {
 					_tracer.error("Duplicate photo in db. \r\n" + desc.toString() + "\r\n"
 							+ _db.get(desc.hashCode()).toString());
+					if (PhotoCollectorConfig.getInstance().isDelDupFilesInDb()) {
+						try {
+							Files.delete(Paths.get(f.getAbsolutePath()));
+							_tracer.error(f.getAbsolutePath() + " is deleted.");
+						} catch (IOException e) {
+							_tracer.error("DbLoadHandler.handle delete error. " + f.getAbsolutePath(), e);
+						}
+					}
 				} else {
 					_db.put(desc.hashCode(), desc);
 				}

@@ -2,6 +2,7 @@ package com.probestar.photocollector.control;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,13 +21,14 @@ public class PhotoCollectorDirector {
 
 	private ConcurrentHashMap<Integer, PhotoDescription> _db;
 	private ArrayList<String> _files;
-	private AtomicInteger _currentSize;;
+	private AtomicInteger _currentSize;
+	private AtomicInteger _copyCount;
 
 	public PhotoCollectorDirector() {
+		load();
 	}
 
 	public void start() {
-		load();
 		startWatcher();
 		process();
 	}
@@ -37,6 +39,7 @@ public class PhotoCollectorDirector {
 		_tracer.info("Start to load search path");
 		_files = (new FileFindHandler()).load();
 		_currentSize = new AtomicInteger(_files.size());
+		_copyCount = new AtomicInteger(0);
 		_tracer.info("Load finished. Db: " + _db.size() + "; SearchPath: " + _currentSize);
 	}
 
@@ -46,12 +49,12 @@ public class PhotoCollectorDirector {
 				while (_currentSize.intValue() > 0) {
 					_tracer.info(_currentSize + " items left.");
 					try {
-						Thread.sleep(3 * 1000);
+						Thread.sleep(5 * 1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
-				_tracer.info("Process done.");
+				_tracer.info("Process done. " + _copyCount.intValue() + " files copied.");
 			}
 		});
 		t.start();
@@ -59,10 +62,14 @@ public class PhotoCollectorDirector {
 
 	private void process() {
 		for (int i = _files.size() - 1; i >= 0; i--) {
-			PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.get(i));
-			_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
-			import2Db(desc);
-			_currentSize.decrementAndGet();
+			try {
+				PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.get(i));
+				_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
+				import2Db(desc);
+				_currentSize.decrementAndGet();
+			} catch (Throwable t) {
+				_tracer.error("PhotoCollectorDirector.process error.\r\n" + _files.get(i).toString(), t);
+			}
 		}
 	}
 
@@ -71,14 +78,13 @@ public class PhotoCollectorDirector {
 		if (descDb != null) {
 			_tracer.info("There is already file in the db.\r\nDbFile: " + descDb.getFileFullName() + "\r\nSearchFile: "
 					+ desc.getFileFullName());
+			delFile(desc.getFileFullName());
 			return;
 		}
-		// String toPath = PhotoCollectorConfig.getInstance().getDbPath()
-		// + PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/"
-		// + PSDate.date2String(desc.getPictureTime(), "yyyyMMdd_HHmmss") + "."
-		// + Files.getFileExtension(desc.getFileName());
 		String toPath = PhotoCollectorConfig.getInstance().getDbPath()
-				+ PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/" + desc.getFileName();
+				+ PSDate.date2String(desc.getPictureTime(), "yyyy") + "/"
+				+ PSDate.date2String(desc.getPictureTime(), "MM") + "/"
+				+ PSDate.date2String(desc.getPictureTime(), "dd") + "/" + desc.getFileName();
 		_tracer.debug("Got to " + toPath);
 		File from = new File(desc.getFileFullName());
 		File to = new File(toPath);
@@ -88,8 +94,22 @@ public class PhotoCollectorDirector {
 			Files.copy(from, to);
 			to.setLastModified(desc.getPictureTime());
 			_db.put(desc.hashCode(), desc);
+			_copyCount.incrementAndGet();
+			_tracer.info("Copy files complete.\r\nFrom: %s\r\nTo: %s", from.getAbsolutePath(), to.getAbsoluteFile());
+			delFile(from.getAbsolutePath());
 		} catch (IOException e) {
 			_tracer.error("PhotoCollectorDirector.import2Db copy file error.", e);
+		}
+	}
+
+	private void delFile(String fullFileName) {
+		if (PhotoCollectorConfig.getInstance().isDelAfterImport()) {
+			try {
+				java.nio.file.Files.delete(Paths.get(fullFileName));
+				_tracer.error(fullFileName + " is deleted.");
+			} catch (IOException e) {
+				_tracer.error("DbLoadHandler.handle delete error. " + fullFileName, e);
+			}
 		}
 	}
 }

@@ -78,6 +78,7 @@ public class PhotoCollectorUtils {
 				map.put(tag.getTagName(), tag.getDescription());
 		}
 		_tracer.debug("Got Exif. " + file.getAbsolutePath() + "\r\n" + map.toString());
+		is.close();
 		return map;
 	}
 }
