@@ -83,8 +83,8 @@ public class PhotoCollectorDirector {
 		}
 		String toPath = PhotoCollectorConfig.getInstance().getDbPath()
 				+ PSDate.date2String(desc.getPictureTime(), "yyyy") + "/"
-				+ PSDate.date2String(desc.getPictureTime(), "MM") + "/"
-				+ PSDate.date2String(desc.getPictureTime(), "dd") + "/" + desc.getFileName();
+				+ PSDate.date2String(desc.getPictureTime(), "yyyyMM") + "/"
+				+ PSDate.date2String(desc.getPictureTime(), "yyyyMMdd") + "/" + desc.getFileName();
 		_tracer.debug("Got to " + toPath);
 		File from = new File(desc.getFileFullName());
 		File to = new File(toPath);
