@@ -1,9 +1,6 @@
 package com.probestar.photocollector.handler;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.probestar.photocollector.common.PhotoCollectorConfig;
@@ -36,20 +33,21 @@ public class DbLoadHandler {
 			if (f.isDirectory()) {
 				handle(fullPath);
 			} else {
-				PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(fullPath);
-				if (_db.containsKey(desc.hashCode())) {
-					_tracer.error("Duplicate photo in db. \r\n" + desc.toString() + "\r\n"
-							+ _db.get(desc.hashCode()).toString());
-					if (PhotoCollectorConfig.getInstance().isDelDupFilesInDb()) {
-						try {
-							Files.delete(Paths.get(f.getAbsolutePath()));
-							_tracer.error(f.getAbsolutePath() + " is deleted.");
-						} catch (IOException e) {
-							_tracer.error("DbLoadHandler.handle delete error. " + f.getAbsolutePath(), e);
-						}
-					}
+				if (f.length() == 0) {
+					f.delete();
+					_tracer.info("Delete ZERO file. " + f.getAbsolutePath());
 				} else {
-					_db.put(desc.hashCode(), desc);
+					PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(f);
+					if (_db.containsKey(desc.hashCode())) {
+						_tracer.info("Duplicate photo in db. \r\n" + desc.toString() + "\r\n"
+								+ _db.get(desc.hashCode()).toString());
+						if (PhotoCollectorConfig.getInstance().isDelDupFilesInDb()) {
+							f.delete();
+							_tracer.info(f.getAbsolutePath() + " is deleted.");
+						}
+					} else {
+						_db.put(desc.hashCode(), desc);
+					}
 				}
 			}
 		}

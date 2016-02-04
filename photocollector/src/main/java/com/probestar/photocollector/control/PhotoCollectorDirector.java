@@ -62,13 +62,20 @@ public class PhotoCollectorDirector {
 
 	private void process() {
 		for (int i = _files.size() - 1; i >= 0; i--) {
+			File f = null;
 			try {
-				PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(_files.get(i));
-				_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
-				import2Db(desc);
+				f = new File(_files.get(i));
+				if (f.length() == 0) {
+					f.delete();
+					_tracer.info("Delete ZERO file. " + f.getAbsolutePath());
+				} else {
+					PhotoDescription desc = PhotoCollectorUtils.getPhotoDescription(f);
+					_tracer.debug("Get PhotoDescription.\r\n" + desc.toString());
+					import2Db(desc);
+				}
 				_currentSize.decrementAndGet();
 			} catch (Throwable t) {
-				_tracer.error("PhotoCollectorDirector.process error.\r\n" + _files.get(i).toString(), t);
+				_tracer.error("PhotoCollectorDirector.process error.\r\n" + f.getAbsolutePath(), t);
 			}
 		}
 	}
@@ -106,7 +113,7 @@ public class PhotoCollectorDirector {
 		if (PhotoCollectorConfig.getInstance().isDelAfterImport()) {
 			try {
 				java.nio.file.Files.delete(Paths.get(fullFileName));
-				_tracer.error(fullFileName + " is deleted.");
+				_tracer.info(fullFileName + " is deleted.");
 			} catch (IOException e) {
 				_tracer.error("DbLoadHandler.handle delete error. " + fullFileName, e);
 			}

@@ -30,9 +30,8 @@ public class PhotoCollectorUtils {
 		_formatters.add("EEE MMM dd HH:mm:ss z yyyy");
 	}
 
-	public static PhotoDescription getPhotoDescription(String fullName) {
+	public static PhotoDescription getPhotoDescription(File f) {
 		PhotoDescription desc = new PhotoDescription();
-		File f = new File(fullName);
 		desc.setFileName(f.getName());
 		desc.setFileSize(f.length());
 		desc.setFilePath(f.getParent());
@@ -55,7 +54,7 @@ public class PhotoCollectorUtils {
 				_tracer.error("PhotoCollectorUtils.getPhotoDescription parse time error. ", e);
 				System.exit(0);
 			} catch (Exception e) {
-				_tracer.error("PhotoCollectorUtils.getPhotoDescription error. FileName: " + fullName, e);
+				_tracer.error("PhotoCollectorUtils.getPhotoDescription error. FileName: " + f.getAbsolutePath(), e);
 				System.exit(0);
 			}
 		} else {
