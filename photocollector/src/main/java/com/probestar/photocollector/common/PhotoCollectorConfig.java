@@ -14,8 +14,8 @@ public class PhotoCollectorConfig {
 
 	private String _dbPath;
 	private ArrayList<String> _searchPath;
-	private boolean _delDupFilesInDb;
-	private boolean _delAfterImport;
+	private boolean _delDuplicateFiles;
+	private boolean _lastModifiedTime;
 
 	static {
 		try {
@@ -41,8 +41,8 @@ public class PhotoCollectorConfig {
 		_searchPath = new ArrayList<String>();
 		for (String s : p.getProperty("SearchPath").split(","))
 			_searchPath.add(s);
-		_delDupFilesInDb = Boolean.parseBoolean(p.getProperty("DelDupFilesInDb", "false"));
-		_delAfterImport = Boolean.parseBoolean(p.getProperty("DelAfterImport", "false"));
+		_delDuplicateFiles = Boolean.parseBoolean(p.getProperty("DelDuplicateFiles", "false"));
+		_lastModifiedTime = Boolean.parseBoolean(p.getProperty("LastModifiedTime", "false"));
 	}
 
 	public String getDbPath() {
@@ -53,12 +53,12 @@ public class PhotoCollectorConfig {
 		return _searchPath;
 	}
 
-	public boolean isDelDupFilesInDb() {
-		return _delDupFilesInDb;
+	public boolean isDelDuplicateFiles() {
+		return _delDuplicateFiles;
 	}
 
-	public boolean isDelAfterImport() {
-		return _delAfterImport;
+	public boolean isLastModifiedTime() {
+		return _lastModifiedTime;
 	}
 
 	@Override

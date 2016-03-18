@@ -13,6 +13,10 @@ public class PhotoDescription {
 	private long _pictureTime;
 	private String _make;
 
+	public PhotoDescription() {
+		_pictureTime = 0;
+	}
+
 	public void setFileName(String name) {
 		_name = name;
 	}

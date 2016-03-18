@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -28,6 +29,10 @@ public class PhotoCollectorUtils {
 		_formatters = new ArrayList<String>();
 		_formatters.add("yyyy:MM:dd HH:mm:ss");
 		_formatters.add("EEE MMM dd HH:mm:ss z yyyy");
+		_formatters.add("yyyy-MM-dd HHmmss");
+		_formatters.add("yyyyMMdd_HHmmss");
+		_formatters.add("yyyyMMddHHmm");
+		_formatters.add("yyyyMMdd");
 	}
 
 	public static PhotoDescription getPhotoDescription(File f) {
@@ -42,9 +47,7 @@ public class PhotoCollectorUtils {
 				String pictrueTime = map.get("Date/Time Original");
 				if (pictrueTime == null)
 					pictrueTime = map.get("Date/Time");
-				if (pictrueTime == null) {
-					desc.setPictureTime(f.lastModified());
-				} else
+				if (pictrueTime != null)
 					desc.setPictureTime(PSDate.string2Date(pictrueTime, _formatters).getTime());
 				String make = map.get("Make");
 				if (make == null)
@@ -57,8 +60,63 @@ public class PhotoCollectorUtils {
 				_tracer.error("PhotoCollectorUtils.getPhotoDescription error. FileName: " + f.getAbsolutePath(), e);
 				System.exit(0);
 			}
-		} else {
-			desc.setPictureTime(f.lastModified());
+		}
+
+		if (!f.isDirectory()) {
+			if (desc.getPictureTime() == 0) {
+				String s = desc.getFileName();
+				if (s.startsWith("IMG_") && s.length() >= 23) {
+					s = s.substring(4, 19);
+					try {
+						Date d = PSDate.string2Date(s, "yyyyMMdd_HHmmss");
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if (desc.getPictureTime() == 0) {
+				String s = desc.getFileName();
+				if (s.startsWith("Screenshot_")) {
+					s = s.substring(11, 30);
+					try {
+						Date d = PSDate.string2Date(s, "yyyy-MM-dd-HH-mm-ss");
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if (desc.getPictureTime() == 0) {
+				String s = desc.getFileName();
+				try {
+					Date d = PSDate.string2Date(s, _formatters);
+					desc.setPictureTime(d.getTime());
+				} catch (ParseException e) {
+				}
+			}
+
+			if (PhotoCollectorConfig.getInstance().isLastModifiedTime()) {
+				if (desc.getPictureTime() == 0) {
+					if (f.lastModified() > 946656000 && f.lastModified() < System.currentTimeMillis())
+						desc.setPictureTime(f.lastModified());
+				}
+			}
+
+			String s = desc.getFileName();
+			if (s.startsWith("image")) {
+				s = s.substring(5, 13);
+				Date d;
+				try {
+					d = PSDate.string2Date(s, _formatters);
+					desc.setPictureTime(d.getTime());
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				
+			}
 		}
 		return desc;
 	}
