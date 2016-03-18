@@ -8,9 +8,6 @@ import com.probestar.psutils.PSTracer;
 public class EmptyDirRemoveHandler {
 	private static PSTracer _tracer = PSTracer.getInstance(EmptyDirRemoveHandler.class);
 
-	public EmptyDirRemoveHandler() {
-	}
-
 	public void load() {
 		for (String s : PhotoCollectorConfig.getInstance().getSearchPath())
 			handle(s);

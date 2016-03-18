@@ -13,6 +13,7 @@ public class PhotoCollectorConfig {
 	private static PhotoCollectorConfig _instance;
 
 	private String _dbPath;
+	private String _db1970Path;
 	private ArrayList<String> _searchPath;
 	private boolean _delDuplicateFiles;
 	private boolean _lastModifiedTime;
@@ -37,7 +38,8 @@ public class PhotoCollectorConfig {
 	private void load() throws FileNotFoundException, IOException {
 		Properties p = new Properties();
 		p.load(new FileInputStream("PhotoCollector.properties"));
-		_dbPath = p.getProperty("DbPath").endsWith("/") ? p.getProperty("DbPath") : p.getProperty("DbPath") + "/";
+		_dbPath = p.getProperty("DbPath");
+		_db1970Path = p.getProperty("Db1970Path");
 		_searchPath = new ArrayList<String>();
 		for (String s : p.getProperty("SearchPath").split(","))
 			_searchPath.add(s);
@@ -47,6 +49,10 @@ public class PhotoCollectorConfig {
 
 	public String getDbPath() {
 		return _dbPath;
+	}
+
+	public String getDb1970Path() {
+		return _db1970Path;
 	}
 
 	public ArrayList<String> getSearchPath() {

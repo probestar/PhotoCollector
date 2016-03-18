@@ -16,6 +16,7 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import com.google.common.io.Files;
 import com.probestar.photocollector.model.PhotoDescription;
 import com.probestar.psutils.PSDate;
 import com.probestar.psutils.PSFile;
@@ -24,6 +25,7 @@ import com.probestar.psutils.PSTracer;
 public class PhotoCollectorUtils {
 	private static PSTracer _tracer = PSTracer.getInstance(PhotoCollectorUtils.class);
 	private static ArrayList<String> _formatters;
+	private static final long Time1990 = 946656000l;
 
 	static {
 		_formatters = new ArrayList<String>();
@@ -33,6 +35,7 @@ public class PhotoCollectorUtils {
 		_formatters.add("yyyyMMdd_HHmmss");
 		_formatters.add("yyyyMMddHHmm");
 		_formatters.add("yyyyMMdd");
+		_formatters.add("MMddyy");
 	}
 
 	public static PhotoDescription getPhotoDescription(File f) {
@@ -68,7 +71,7 @@ public class PhotoCollectorUtils {
 				if (s.startsWith("IMG_") && s.length() >= 23) {
 					s = s.substring(4, 19);
 					try {
-						Date d = PSDate.string2Date(s, "yyyyMMdd_HHmmss");
+						Date d = PSDate.string2Date(s, _formatters);
 						desc.setPictureTime(d.getTime());
 					} catch (ParseException e) {
 						e.printStackTrace();
@@ -91,16 +94,67 @@ public class PhotoCollectorUtils {
 
 			if (desc.getPictureTime() == 0) {
 				String s = desc.getFileName();
-				try {
-					Date d = PSDate.string2Date(s, _formatters);
-					desc.setPictureTime(d.getTime());
-				} catch (ParseException e) {
+				if (s.startsWith("Photo_")) {
+					s = s.substring(6, 12);
+					try {
+						Date d = PSDate.string2Date(s, _formatters);
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if (desc.getPictureTime() == 0) {
+				String s = desc.getFileName();
+				if (s.startsWith("VID_")) {
+					s = s.substring(4, 19);
+					try {
+						Date d = PSDate.string2Date(s, _formatters);
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			if (desc.getPictureTime() == 0) {
+				String s = Files.getNameWithoutExtension(desc.getFileName());
+				if (s.length() == 12) {
+					try {
+						Date d = PSDate.string2Date(s, "MMddyyHHmmss");
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+					}
+				} else {
+					try {
+						Date d = PSDate.string2Date(s, _formatters);
+						desc.setPictureTime(d.getTime());
+					} catch (ParseException e) {
+					}
+				}
+			}
+
+			long now = System.currentTimeMillis();
+			if (desc.getPictureTime() < Time1990 || desc.getPictureTime() > now) {
+				String s = desc.getFileName();
+				if (s.length() >= 13) {
+					s = s.substring(0, 13);
+					try {
+						Date d = new Date(Long.parseLong(s));
+						if (d.getTime() < Time1990 || d.getTime() > now)
+							desc.setPictureTime(0);
+						else
+							desc.setPictureTime(d.getTime());
+					} catch (NumberFormatException ex) {
+						desc.setPictureTime(0);
+					}
 				}
 			}
 
 			if (PhotoCollectorConfig.getInstance().isLastModifiedTime()) {
 				if (desc.getPictureTime() == 0) {
-					if (f.lastModified() > 946656000 && f.lastModified() < System.currentTimeMillis())
+					if (f.lastModified() > Time1990 && f.lastModified() < now)
 						desc.setPictureTime(f.lastModified());
 				}
 			}
@@ -108,14 +162,14 @@ public class PhotoCollectorUtils {
 			String s = desc.getFileName();
 			if (s.startsWith("image")) {
 				s = s.substring(5, 13);
-				Date d;
+				Date d = null;
 				try {
 					d = PSDate.string2Date(s, _formatters);
 					desc.setPictureTime(d.getTime());
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
-				
+
 			}
 		}
 		return desc;

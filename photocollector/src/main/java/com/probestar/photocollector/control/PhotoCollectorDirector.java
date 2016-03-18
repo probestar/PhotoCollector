@@ -3,22 +3,21 @@ package com.probestar.photocollector.control;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.io.Files;
 import com.probestar.photocollector.common.PhotoCollectorConfig;
 import com.probestar.photocollector.common.PhotoCollectorUtils;
+import com.probestar.photocollector.handler.Dir1970Handler;
 import com.probestar.photocollector.handler.EmptyDirRemoveHandler;
 import com.probestar.photocollector.handler.FileFindHandler;
 import com.probestar.photocollector.model.PhotoDescription;
 import com.probestar.psutils.PSDate;
-import com.probestar.psutils.PSFile;
 import com.probestar.psutils.PSTracer;
 
 public class PhotoCollectorDirector {
 	private static PSTracer _tracer = PSTracer.getInstance(PhotoCollectorDirector.class);
-	private static final long HashSize = 60 * 1024;
+	// private static final long HashSize = 60 * 1024;
 
 	private ArrayList<String> _files;
 	private AtomicInteger _currentSize;
@@ -32,6 +31,7 @@ public class PhotoCollectorDirector {
 	public void start() {
 		startWatcher();
 		process();
+		(new Dir1970Handler()).load();
 		(new EmptyDirRemoveHandler()).load();
 	}
 
@@ -42,8 +42,8 @@ public class PhotoCollectorDirector {
 	}
 
 	private void load() {
-		_tracer.info("Start to load db.");
-		_tracer.info("Start to load search path");
+		_tracer.warn("Start to load db.");
+		_tracer.warn("Start to load search path");
 		_files = (new FileFindHandler()).load();
 		_currentSize = new AtomicInteger(_files.size());
 		_copyCount = new AtomicInteger(0);
@@ -53,14 +53,14 @@ public class PhotoCollectorDirector {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
 				while (_currentSize.intValue() > 0) {
-					_tracer.info(_currentSize + " items left.");
+					_tracer.warn(_currentSize + " items left.");
 					try {
 						Thread.sleep(5 * 1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
-				_tracer.info("Process done. " + _copyCount.intValue() + " files copied.");
+				_tracer.warn("Process done. " + _copyCount.intValue() + " files copied.");
 			}
 		});
 		t.start();
@@ -95,9 +95,9 @@ public class PhotoCollectorDirector {
 		File to = new File(toPath);
 		if (to.exists()) {
 			if (PhotoCollectorConfig.getInstance().isDelDuplicateFiles()) {
-				byte[] md5_from = PSFile.getHashCode(from, HashSize);
-				byte[] md5_to = PSFile.getHashCode(to, HashSize);
-				if (Arrays.equals(md5_from, md5_to) && from.length() == to.length()) {
+				// byte[] md5_from = PSFile.getHashCode(from, HashSize);
+				// byte[] md5_to = PSFile.getHashCode(to, HashSize);
+				if (from.length() == to.length()) {
 					if (from.delete())
 						_tracer.info("Del duplicate files.\r\nFrom: %s\r\nTo: %s", from.getAbsolutePath(),
 								to.getAbsoluteFile());
